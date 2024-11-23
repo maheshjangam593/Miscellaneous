@@ -1,0 +1,80 @@
+version: '3.7'
+services: 
+  currency-exchange:
+    image: in28min/mmv2-currency-exchange-servicev2:0.0.1-SNAPSHOT
+    mem_limit: 700m
+    ports: 
+      - "8000:8000"
+    networks: 
+      - currency-network
+    depends_on:
+      - netfilx-eureka-naming-serverv2
+      - rabbitmq
+    environment:
+      eureka.client.serviceUrl.defaultZone: http://netfilx-eureka-naming-serverv2:8761/eureka
+      spring-zipkin-baseurl: http://zipkin-server:9411/
+      RABBIT_URI: amqp://guest:guest@rabbitmq:5672
+      SPRING_RABBITMQ_HOST: rabbitmq
+      SPRING_ZIPKIN_SENDER_TYPE: rabbit
+  currency-conversion-servicev2:
+    image: in28min/mmv2-currency-conversion-servicev2:0.0.1-SNAPSHOT
+    mem_limit: 700m
+    ports: 
+      - "8100:8100"
+    networks: 
+      - currency-network
+    depends_on:
+      - netfilx-eureka-naming-serverv2
+      - rabbitmq
+    environment:
+      eureka.client.serviceUrl.defaultZone: http://netfilx-eureka-naming-serverv2:8761/eureka
+      spring-zipkin-baseurl: http://zipkin-server:9411/
+      RABBIT_URI: amqp://guest:guest@rabbitmq:5672
+      SPRING_RABBITMQ_HOST: rabbitmq
+      SPRING_ZIPKIN_SENDER_TYPE: rabbit
+   
+  spring-cloud-gateway-serverv2:
+    image: in28min/mmv2-spring-cloud-gateway-serverv2:0.0.1-SNAPSHOT
+    mem_limit: 700m
+    ports: 
+      - "8765:8765"
+    networks: 
+      - currency-network
+    depends_on:
+      - netfilx-eureka-naming-serverv2
+      - rabbitmq
+    environment:
+      eureka.client.serviceUrl.defaultZone: http://netfilx-eureka-naming-serverv2:8761/eureka
+      spring-zipkin-baseurl: http://zipkin-server:9411/
+      RABBIT_URI: amqp://guest:guest@rabbitmq:5672
+      SPRING_RABBITMQ_HOST: rabbitmq
+      SPRING_ZIPKIN_SENDER_TYPE: rabbit
+#docker run -p 9411:9411 openzipkin/zipkin
+  zipkin-server:
+    image: openzipkin/zipkin
+    mem_limit: 300m
+    ports: 
+      - "9411:9411"
+    networks: 
+      - currency-network
+    depends_on:
+      - rabbitmq
+    environment: 
+      RABBIT_URI: amqp://guest:guest@rabbitmq:5672
+  netfilx-eureka-naming-serverv2:  
+    image: in28min/mmv2-netfilx-eureka-naming-serverv2:0.0.1-SNAPSHOT
+    mem_limit: 700m
+    ports: 
+      - "8761:8761"
+    networks: 
+      - currency-network
+  rabbitmq: 
+    image: rabbitmq:3.8.12-management
+    mem_limit: 300m
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+networks: 
+  currency-network: 
+  
+  
